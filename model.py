@@ -5,7 +5,7 @@ from keras.applications import ResNet101
 from keras.applications import ResNet152
 from keras.applications import VGG16
 
-from keras.layers import Dense, Flatten
+from keras.layers import Dense, Flatten, Input
 from keras.models import Model
 
 class Scan_net(): 
@@ -27,13 +27,15 @@ class Scan_net():
 
 class Scan_net2(): 
 	def __init__(self, model, split_layer_names): 
-		model_input = model.layers[0].input
+		#model_input = model.input[0]
+		model_input = Input(shape=(224,224,None), dtype='float32', name='main_input')
 		print(model_input)
-		X = model.layers[0](model_input)
+		print(model.layers[1])
+		X = model.layers[1](model_input)
 		pred_outputs = [] # holding all output layers of the scan_net
 		i = 1 # used in classifier names
 		for j, layer in enumerate(model.layers):
-			if j != 0: 
+			if j > 1: 
 				X = layer(X)
 				if layer.name in split_layer_names:
 					classifier_name = 'classifier_' + str(i+1)
@@ -50,6 +52,6 @@ class Scan_net2():
 if __name__ == '__main__': 
 	split_layer_names = ['block2_pool', 'block3_pool']
 	model = VGG16(include_top=True, weights='imagenet') #create pretrained VGG16
-	#model.summary()
+	model.summary()
 	#print(len(model.layers))
 	scan_net = Scan_net2(model, split_layer_names)
