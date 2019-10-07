@@ -10,27 +10,7 @@ from keras.models import Model
 
 class Scan_net(): 
 	def __init__(self, model, split_layer_names): 
-		model_input = model.inputs[0]
-		#layer_dict = dict([(layer.name, layer) for layer in model.layers[1:]])
-		i = 1
-		for layer in model.layers:
-			if layer.name in split_layer_names:
-				classifier_name = 'classifier_' + str(i+1)
-				print(classifier_name)
-				split_layer = layer.output[-1]
-				split_layer = Flatten()(split_layer)
-				pred_layer = Dense(100, activation='softmax', name=classifier_name)(split_layer)
-				i += 1
-		model.summary()
-		print('='*70)
-		print(len(model.layers))
-
-class Scan_net2(): 
-	def __init__(self, model, split_layer_names): 
-		#model_input = model.input[0]
 		model_input = Input(shape=(224,224,None), dtype='float32', name='main_input')
-		print(model_input)
-		print(model.layers[1])
 		X = model.layers[1](model_input)
 		pred_outputs = [] # holding all output layers of the scan_net
 		i = 1 # used in classifier names
@@ -52,6 +32,6 @@ class Scan_net2():
 if __name__ == '__main__': 
 	split_layer_names = ['block2_pool', 'block3_pool']
 	model = VGG16(include_top=True, weights='imagenet') #create pretrained VGG16
-	model.summary()
+	#model.summary()
 	#print(len(model.layers))
-	scan_net = Scan_net2(model, split_layer_names)
+	scan_net = Scan_net(model, split_layer_names)
