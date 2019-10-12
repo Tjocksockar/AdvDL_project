@@ -22,7 +22,7 @@ def create_scan_net(model, split_layer_names):
 				classifier_name = 'classifier_' + str(i)
 				print(classifier_name)
 				pred_layer = Flatten()(X)
-				pred_layer = Dense(100, activation='softmax', name=classifier_name)(pred_layer)
+				pred_layer = Dense(1000, activation='softmax', name=classifier_name)(pred_layer)
 				pred_outputs.append(pred_layer)
 				i += 1
 	pred_outputs.append(X)
@@ -31,7 +31,7 @@ def create_scan_net(model, split_layer_names):
 	print(len(scan_model.layers))
 	return scan_model
 
-def custom_loss(q_c, F_c=0, F_i=0, alpha=0.5, beta=0.2): # beta corresponds to lambda in the paper
+def custom_loss(q_c, F_c=0.0, F_i=0.0, alpha=0.5, beta=0.2): # beta corresponds to lambda in the paper
 	def loss(y_true, y_pred): 
 		KLD = kullback_leibler_divergence(q_c, y_pred)
 		cross_entropy = categorical_crossentropy(y_true, y_pred)
@@ -43,7 +43,6 @@ def custom_loss(q_c, F_c=0, F_i=0, alpha=0.5, beta=0.2): # beta corresponds to l
 if __name__ == '__main__': 
 	split_layer_names = ['block2_pool', 'block3_pool']
 	model = VGG16(include_top=True, weights='imagenet') #create pretrained VGG16
-	#model.summary()
-	#print(len(model.layers))
+
 	scan_net = create_scan_net(model, split_layer_names)
-	scan_net.compile(optimizer='Adam', loss = custom_loss(scan_net.get_layer('predictions').output), metrics = ['accuracy'])
+	scan_net.compile(optimizer='Adam', loss = custom_loss(scan_net.get_layer('predictions').get_output_at(-1)), metrics = ['accuracy'])
