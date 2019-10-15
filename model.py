@@ -16,23 +16,28 @@ def add_module(layer, classifier_name):
 	"""Attention Module"""
 	input_copy = copy.copy(layer)
 	print(input_copy.shape)
-	x = Conv2D(filters=64, kernel_size=(2, 2), strides=2)(layer) #Actual kernel size unknown
+	x = Conv2D(filters=int(layer.shape[-1])//2, kernel_size=(2, 2), strides=2)(layer) #Actual kernel size unknown
 	x = BatchNormalization()(x)
 	x = Activation(relu)(x)
-	x = Conv2DTranspose(filters=128, kernel_size=(2, 2), strides=(2, 2))(x) #Actual kernel size unknown
+	x = Conv2DTranspose(filters=int(layer.shape[-1]), kernel_size=(2, 2), strides=(2, 2))(x) #Actual kernel size unknown
+	print(x.shape)
 	x = BatchNormalization()(x)
 	x = Activation(sigmoid)(x)
 	print("before dot")
+	x.set_shape(input_copy.shape)
 	print(x.shape)
+	
 	x = dot(inputs=[x, input_copy], axes=((3), (3))) #is this the right dot product? (yes, pretty shure)
 	#x = Reshape([x.shape[2], x.shape[3]])(x)
+	
+	x = K.squeeze(x, 0)
 	print("after dot")
 	print(x.shape)
 
 	"""Bottleneck"""
 	"""Antal filter går från 64 eller 128 till 512, var sker övergången?"""
 	"""Dimensionen går från 112 till 14, alltså division med 8, eller 2^3"""
-	x = Conv2D(filters=512, kernel_size=(1, 1), strides=1, data_format="channels_first")(x)
+	x = Conv2D(filters=512, kernel_size=(1, 1), strides=1)(x)
 	x = BatchNormalization()(x)
 	x = Activation(relu)(x)
 	x = Conv2D(filters=512, kernel_size=(3, 3), strides=1)(x)
