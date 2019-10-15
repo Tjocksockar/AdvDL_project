@@ -8,29 +8,22 @@ from keras.applications import ResNet152
 from keras.applications import VGG16
 
 from keras.losses import categorical_crossentropy, kullback_leibler_divergence
-from keras.layers import Dense, Flatten, Input, Conv2D, BatchNormalization, Activation, Conv2DTranspose, Multiply, multiply
+from keras.layers import Dense, Flatten, Input, Conv2D, BatchNormalization, Activation, Conv2DTranspose, Multiply
 from keras.models import Model
 from keras.activations import relu, sigmoid
 
 def add_module(layer, classifier_name):
 	"""Attention Module"""
-	input_copy = copy.copy(layer)
-	print(input_copy.shape)
 	x = Conv2D(filters=int(layer.shape[-1])//2, kernel_size=(2, 2), strides=2)(layer) #Actual kernel size unknown
 	x = BatchNormalization()(x)
 	x = Activation(relu)(x)
 	x = Conv2DTranspose(filters=int(layer.shape[-1]), kernel_size=(2, 2), strides=(2, 2))(x) #Actual kernel size unknown
 	x = BatchNormalization()(x)
 	x = Activation(sigmoid)(x)
-	print("before dot")
-	x.set_shape(input_copy.shape)
-	print(x.shape)
+	x.set_shape(layer.shape)
 	
 	x = Multiply()([x, layer]) #is this the right dot product? (yes, pretty shure)
 	
-	print("after dot")
-	print(x.shape)
-
 	"""Bottleneck"""
 	"""Antal filter går från 64 eller 128 till 512, var sker övergången?"""
 	"""Dimensionen går från 112 till 14, alltså division med 8, eller 2^3"""
