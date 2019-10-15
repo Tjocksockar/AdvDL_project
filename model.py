@@ -8,7 +8,7 @@ from keras.applications import ResNet152
 from keras.applications import VGG16
 
 from keras.losses import categorical_crossentropy, kullback_leibler_divergence
-from keras.layers import Dense, Flatten, Input, Conv2D, BatchNormalization, Activation, Conv2DTranspose, dot, Reshape
+from keras.layers import Dense, Flatten, Input, Conv2D, BatchNormalization, Activation, Conv2DTranspose, Multiply, multiply
 from keras.models import Model
 from keras.activations import relu, sigmoid
 
@@ -20,17 +20,14 @@ def add_module(layer, classifier_name):
 	x = BatchNormalization()(x)
 	x = Activation(relu)(x)
 	x = Conv2DTranspose(filters=int(layer.shape[-1]), kernel_size=(2, 2), strides=(2, 2))(x) #Actual kernel size unknown
-	print(x.shape)
 	x = BatchNormalization()(x)
 	x = Activation(sigmoid)(x)
 	print("before dot")
 	x.set_shape(input_copy.shape)
 	print(x.shape)
 	
-	x = dot(inputs=[x, input_copy], axes=((3), (3))) #is this the right dot product? (yes, pretty shure)
-	#x = Reshape([x.shape[2], x.shape[3]])(x)
+	x = Multiply()([x, layer]) #is this the right dot product? (yes, pretty shure)
 	
-	x = K.squeeze(x, 0)
 	print("after dot")
 	print(x.shape)
 
