@@ -1,5 +1,6 @@
 import tensorflow as tf 
 import keras.backend as K
+import copy
 
 from keras.applications import ResNet50
 from keras.applications import ResNet101
@@ -7,8 +8,42 @@ from keras.applications import ResNet152
 from keras.applications import VGG16
 
 from keras.losses import categorical_crossentropy, kullback_leibler_divergence
-from keras.layers import Dense, Flatten, Input
+from keras.layers import Dense, Flatten, Input, Conv2D, BatchNormalization, Activation, Conv2DTranspose, dot, Reshape
 from keras.models import Model
+from keras.activations import relu, sigmoid
+
+def add_module(layer, classifier_name):
+	"""Attention Module"""
+	input_copy = copy.copy(layer)
+	print(input_copy.shape)
+	x = Conv2D(filters=64, kernel_size=(2, 2), strides=2)(layer) #Actual kernel size unknown
+	x = BatchNormalization()(x)
+	x = Activation(relu)(x)
+	x = Conv2DTranspose(filters=128, kernel_size=(2, 2), strides=(2, 2))(x) #Actual kernel size unknown
+	x = BatchNormalization()(x)
+	x = Activation(sigmoid)(x)
+	print("before dot")
+	print(x.shape)
+	x = dot(inputs=[x, input_copy], axes=((3), (3))) #is this the right dot product? (yes, pretty shure)
+	#x = Reshape([x.shape[2], x.shape[3]])(x)
+	print("after dot")
+	print(x.shape)
+
+	"""Bottleneck"""
+	"""Antal filter går från 64 eller 128 till 512, var sker övergången?"""
+	"""Dimensionen går från 112 till 14, alltså division med 8, eller 2^3"""
+	x = Conv2D(filters=512, kernel_size=(1, 1), strides=1, data_format="channels_first")(x)
+	x = BatchNormalization()(x)
+	x = Activation(relu)(x)
+	x = Conv2D(filters=512, kernel_size=(3, 3), strides=1)(x)
+	x = BatchNormalization()(x)
+	x = Activation(relu)(x)
+	x = Conv2D(filters=512, kernel_size=(1, 1), strides=1)(x)
+	x = BatchNormalization()(x)
+	x = Activation(relu)(x)
+	x = Flatten()(x)
+	pred_layer = Dense(1000, activation='softmax', name=classifier_name)(x)
+	return pred_layer
 
 def create_scan_net(model, split_layer_names): 
 	model_input = Input(shape=(224,224,None), dtype='float32', name='main_input')
@@ -21,8 +56,9 @@ def create_scan_net(model, split_layer_names):
 			if layer.name in split_layer_names:
 				classifier_name = 'classifier_' + str(i)
 				print(classifier_name)
-				pred_layer = Flatten()(X)
-				pred_layer = Dense(1000, activation='softmax', name=classifier_name)(pred_layer)
+				pred_layer = add_module(X, classifier_name)
+				# pred_layer = Flatten()(X)
+				# pred_layer = Dense(1000, activation='softmax', name=classifier_name)(pred_layer)
 				pred_outputs.append(pred_layer)
 				i += 1
 	pred_outputs.append(X)
