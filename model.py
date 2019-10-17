@@ -8,35 +8,24 @@ from keras.applications import ResNet152
 from keras.applications import VGG16
 
 from keras.losses import categorical_crossentropy, kullback_leibler_divergence
+<<<<<<< HEAD
 from keras.layers import Dense, Flatten, Input, Conv2D, BatchNormalization, Activation, Conv2DTranspose, dot, Reshape, concatenate, multiply
+=======
+from keras.layers import Dense, Flatten, Input, Conv2D, BatchNormalization, Activation, Conv2DTranspose, Multiply
+>>>>>>> 255de297c643a7f856c08165bea99529c75257d4
 from keras.models import Model
 from keras.activations import relu, sigmoid
 
 def add_module(layer, classifier_name):
 	"""Attention Module"""
-	input_copy = copy.copy(layer)
-	print(input_copy.shape)
 	x = Conv2D(filters=int(layer.shape[-1])//2, kernel_size=(2, 2), strides=2)(layer) #Actual kernel size unknown
 	x = BatchNormalization()(x)
 	x = Activation(relu)(x)
 	x = Conv2DTranspose(filters=int(layer.shape[-1]), kernel_size=(2, 2), strides=(2, 2))(x) #Actual kernel size unknown
-	print(x.shape)
 	x = BatchNormalization()(x)
 	x = Activation(sigmoid)(x)
-	print("before dot")
-	x.set_shape(input_copy.shape)
-	print(x.shape)
-	#x = K.squeeze(x, 0)
-	#input_copy = K.squeeze(input_copy, 0)
-	#K.sum(multiply(x, input_b[:K.expand_dims]), axis=-1, keepdims=True)
-	#x = dot(inputs=[x, input_copy], axes=3) #is this the right dot product? (yes, pretty shure)
-	x = multiply([input_copy, x])
-	#x = Reshape([x.shape[2], x.shape[3]])(x)
-	
-	#
-	print("after dot")
-	print(x.shape)
-
+	x.set_shape(layer.shape)
+	x = Multiply()([x, layer]) #is this the right dot product? (yes, pretty shure)
 	"""Bottleneck"""
 	"""Antal filter går från 64 eller 128 till 512, var sker övergången?"""
 	"""Dimensionen går från 112 till 14, alltså division med 8, eller 2^3"""
