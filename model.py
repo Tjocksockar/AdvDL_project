@@ -8,7 +8,7 @@ from keras.applications import ResNet152
 from keras.applications import VGG16
 
 from keras.losses import categorical_crossentropy, kullback_leibler_divergence
-from keras.layers import Dense, Flatten, Input, Conv2D, BatchNormalization, Activation, Conv2DTranspose, dot, Reshape
+from keras.layers import Dense, Flatten, Input, Conv2D, BatchNormalization, Activation, Conv2DTranspose, dot, Reshape, concatenate, multiply
 from keras.models import Model
 from keras.activations import relu, sigmoid
 
@@ -26,11 +26,14 @@ def add_module(layer, classifier_name):
 	print("before dot")
 	x.set_shape(input_copy.shape)
 	print(x.shape)
-	
-	x = dot(inputs=[x, input_copy], axes=((3), (3))) #is this the right dot product? (yes, pretty shure)
+	#x = K.squeeze(x, 0)
+	#input_copy = K.squeeze(input_copy, 0)
+	#K.sum(multiply(x, input_b[:K.expand_dims]), axis=-1, keepdims=True)
+	#x = dot(inputs=[x, input_copy], axes=3) #is this the right dot product? (yes, pretty shure)
+	x = multiply([input_copy, x])
 	#x = Reshape([x.shape[2], x.shape[3]])(x)
 	
-	x = K.squeeze(x, 0)
+	#
 	print("after dot")
 	print(x.shape)
 
@@ -47,6 +50,7 @@ def add_module(layer, classifier_name):
 	x = BatchNormalization()(x)
 	x = Activation(relu)(x)
 	x = Flatten()(x)
+	print(x.shape)
 	pred_layer = Dense(1000, activation='softmax', name=classifier_name)(x)
 	return pred_layer
 
@@ -67,6 +71,7 @@ def create_scan_net(model, split_layer_names):
 				pred_outputs.append(pred_layer)
 				i += 1
 	pred_outputs.append(X)
+	pred_outputs = concatenate(pred_outputs)
 	scan_model = Model(inputs=model_input, outputs=pred_outputs)
 	scan_model.summary()
 	print(len(scan_model.layers))
