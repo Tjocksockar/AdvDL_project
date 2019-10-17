@@ -72,8 +72,13 @@ def custom_loss(q_c, F_c=0.0, F_i=0.0, alpha=0.5, beta=0.2): # beta corresponds 
 	return loss 
 
 if __name__ == '__main__': 
-	split_layer_names = ['block2_pool', 'block3_pool']
+	split_layer_names = ['block2_pool', 'block3_pool', 'block4_pool']
 	model = VGG16(include_top=True, weights='imagenet') #create pretrained VGG16
 
 	scan_net = create_scan_net(model, split_layer_names)
-	scan_net.compile(optimizer='Adam', loss = custom_loss(scan_net.get_layer('predictions').get_output_at(-1)), metrics = ['accuracy'])
+	scan_net.compile(optimizer='Adam', 
+		loss = [custom_loss(scan_net.get_layer('predictions').get_output_at(-1), scan_net.get_layer('flatten').get_output_at(-1), scan_net.get_layer('flatten_1').get_output_at(-1)), 
+		custom_loss(scan_net.get_layer('predictions').get_output_at(-1), scan_net.get_layer('flatten').get_output_at(-1), scan_net.get_layer('flatten_2').get_output_at(-1)), 
+		custom_loss(scan_net.get_layer('predictions').get_output_at(-1), scan_net.get_layer('flatten').get_output_at(-1), scan_net.get_layer('flatten_3').get_output_at(-1)), 
+		custom_loss(scan_net.get_layer('predictions').get_output_at(-1), scan_net.get_layer('flatten').get_output_at(-1), scan_net.get_layer('flatten').get_output_at(-1))], 
+		metrics = ['accuracy'])
