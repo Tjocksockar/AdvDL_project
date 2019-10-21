@@ -9,6 +9,7 @@ import copy
 from keras.applications import VGG16
 from keras.applications.vgg16 import preprocess_input, decode_predictions
 import keras
+from keras.utils import plot_model
 from keras.losses import categorical_crossentropy, kullback_leibler_divergence
 from keras.layers import Dense, Flatten, Input, Conv2D, BatchNormalization, Activation, Conv2DTranspose, Multiply, Dropout
 from keras.models import Model, Sequential, load_model
@@ -18,6 +19,7 @@ from keras.datasets import cifar100
 
 def add_module(layer, classifier_name):
 	"""Attention Module"""
+	print(layer.shape)
 	x = Conv2D(filters=int(layer.shape[-1])//2, kernel_size=(2, 2), strides=2)(layer) #Actual kernel size unknown
 	x = BatchNormalization()(x)
 	x = Activation(relu)(x)
@@ -31,6 +33,7 @@ def add_module(layer, classifier_name):
 	"""Bottleneck"""
 	"""Antal filter går från 64 eller 128 till 512, var sker övergången?"""
 	"""Dimensionen går från 112 till 14, alltså division med 8, eller 2^3"""
+	print(x.shape)
 	x = Conv2D(filters=512, kernel_size=(1, 1), strides=1)(x)
 	x = BatchNormalization()(x)
 	x = Activation(relu)(x)
@@ -60,6 +63,7 @@ def create_scan_net(model, split_layer_names):
 				# pred_layer = Dense(1000, activation='softmax', name=classifier_name)(pred_layer)
 				pred_outputs.append(pred_layer)
 				i += 1
+	model.get_layer(name='flatten_1').name='flatten_1_original'
 	pred_outputs.append(X)
 	scan_model = Model(inputs=model_input, outputs=pred_outputs)
 	scan_model.summary()
@@ -78,13 +82,11 @@ def create_vgg_net(model):
 		if j > 1:
 			X = layer(X)
 
-	print(model.layers[4].get_output_at(0))
-	print(model.layers[4].get_output_at(1))
 	X = model.layers[1](X)
 	X = model.layers[2](X)
 	X = model.layers[3](X)
 	X = model.layers[4](X)
-	vgg_model = Model(inputs=model_inp, outputs=model.layers[4].get_output_at(-1))
+	vgg_model = Model(inputs=model_inp, outputs=X)
 	#vgg_model = Model(inputs=model_inp, outputs=awt)
 	vgg_model.summary()
 	return vgg_model
@@ -99,15 +101,16 @@ def custom_loss(q_c, F_c=0.0, F_i=0.0, alpha=0.5, beta=0.2): # beta corresponds 
 	return loss
 
 if __name__ == '__main__':
-		split_layer_names = ['block2_pool', 'block3_pool', 'block4_pool']
+		split_layer_names = ['block2_conv2', 'block3_conv3', 'block4_conv3']
 		#model = VGG16(include_top=True, weights='imagenet') #create pretrained VGG16
 		model2 = load_model('my_model2.h5')
 		vgg_16 = create_vgg_net(model2)
 
 		scan_net = create_scan_net(vgg_16, split_layer_names)
 		scan_net.compile(optimizer='Adam',
-		loss = [custom_loss(scan_net.get_layer('predictions').get_output_at(-1), scan_net.get_layer('flatten').get_output_at(-1), scan_net.get_layer('flatten_1').get_output_at(-1)),
-		custom_loss(scan_net.get_layer('predictions').get_output_at(-1), scan_net.get_layer('flatten').get_output_at(-1), scan_net.get_layer('flatten_2').get_output_at(-1)),
-		custom_loss(scan_net.get_layer('predictions').get_output_at(-1), scan_net.get_layer('flatten').get_output_at(-1), scan_net.get_layer('flatten_3').get_output_at(-1)),
-		custom_loss(scan_net.get_layer('predictions').get_output_at(-1), scan_net.get_layer('flatten').get_output_at(-1), scan_net.get_layer('flatten').get_output_at(-1))],
+		loss = [custom_loss(scan_net.get_layer('dense_2').get_output_at(-1), scan_net.get_layer('flatten_1_original').get_output_at(-1), scan_net.get_layer('flatten_1').get_output_at(-1)),
+		custom_loss(scan_net.get_layer('dense_2').get_output_at(-1), scan_net.get_layer('flatten_1_original').get_output_at(-1), scan_net.get_layer('flatten_2').get_output_at(-1)),
+		custom_loss(scan_net.get_layer('dense_2').get_output_at(-1), scan_net.get_layer('flatten_1_original').get_output_at(-1), scan_net.get_layer('flatten_3').get_output_at(-1)),
+		custom_loss(scan_net.get_layer('dense_2').get_output_at(-1), scan_net.get_layer('flatten_1_original').get_output_at(-1), scan_net.get_layer('flatten_1_original').get_output_at(-1))],
 		metrics = ['accuracy'])
+		plot_model(scan_net, to_file='model.png')
