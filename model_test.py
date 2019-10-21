@@ -9,7 +9,6 @@ import copy
 from keras.applications import VGG16
 from keras.applications.vgg16 import preprocess_input, decode_predictions
 import keras
-from keras.utils import plot_model
 from keras.losses import categorical_crossentropy, kullback_leibler_divergence
 from keras.layers import Dense, Flatten, Input, Conv2D, BatchNormalization, Activation, Conv2DTranspose, Multiply, Dropout
 from keras.models import Model, Sequential, load_model
@@ -113,4 +112,3 @@ if __name__ == '__main__':
 		custom_loss(scan_net.get_layer('dense_2').get_output_at(-1), scan_net.get_layer('flatten_1_original').get_output_at(-1), scan_net.get_layer('flatten_3').get_output_at(-1)),
 		custom_loss(scan_net.get_layer('dense_2').get_output_at(-1), scan_net.get_layer('flatten_1_original').get_output_at(-1), scan_net.get_layer('flatten_1_original').get_output_at(-1))],
 		metrics = ['accuracy'])
-		plot_model(scan_net, to_file='model.png')

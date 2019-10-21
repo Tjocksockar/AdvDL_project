@@ -8,11 +8,7 @@ from keras.applications import ResNet152
 from keras.applications import VGG16
 
 from keras.losses import categorical_crossentropy, kullback_leibler_divergence
-<<<<<<< HEAD
-from keras.layers import Dense, Flatten, Input, Conv2D, BatchNormalization, Activation, Conv2DTranspose, dot, Reshape, concatenate, multiply
-=======
 from keras.layers import Dense, Flatten, Input, Conv2D, BatchNormalization, Activation, Conv2DTranspose, Multiply
->>>>>>> 255de297c643a7f856c08165bea99529c75257d4
 from keras.models import Model
 from keras.activations import relu, sigmoid
 
@@ -25,7 +21,9 @@ def add_module(layer, classifier_name):
 	x = BatchNormalization()(x)
 	x = Activation(sigmoid)(x)
 	x.set_shape(layer.shape)
+	
 	x = Multiply()([x, layer]) #is this the right dot product? (yes, pretty shure)
+	
 	"""Bottleneck"""
 	"""Antal filter går från 64 eller 128 till 512, var sker övergången?"""
 	"""Dimensionen går från 112 till 14, alltså division med 8, eller 2^3"""
@@ -39,7 +37,6 @@ def add_module(layer, classifier_name):
 	x = BatchNormalization()(x)
 	x = Activation(relu)(x)
 	x = Flatten()(x)
-	print(x.shape)
 	pred_layer = Dense(1000, activation='softmax', name=classifier_name)(x)
 	return pred_layer
 
@@ -60,7 +57,6 @@ def create_scan_net(model, split_layer_names):
 				pred_outputs.append(pred_layer)
 				i += 1
 	pred_outputs.append(X)
-	pred_outputs = concatenate(pred_outputs)
 	scan_model = Model(inputs=model_input, outputs=pred_outputs)
 	scan_model.summary()
 	print(len(scan_model.layers))
@@ -75,9 +71,22 @@ def custom_loss(q_c, F_c=0.0, F_i=0.0, alpha=0.5, beta=0.2): # beta corresponds 
 		return loss_value
 	return loss 
 
+def create_scan_for_resnet(model, split_layer_names): 
+	pred_outputs = []
+	for i, layer_name in enumerate(split_layer_names): 
+		layer = model.get_layer(layer_name).output
+		output_name = 'classifier_' + str(i+1)
+		print(output_name)
+		pred_layer = add_module(layer, output_name)
+		pred_outputs.append(pred_layer)
+	pred_outputs.append(model.layers[-1].output)
+	scan_net = Model(inputs=model.input, outputs=pred_outputs)
+	return scan_net
+
 if __name__ == '__main__': 
 	split_layer_names = ['block2_pool', 'block3_pool', 'block4_pool']
 	model = VGG16(include_top=True, weights='imagenet') #create pretrained VGG16
+	print(len(model.layers))
 
 	scan_net = create_scan_net(model, split_layer_names)
 	scan_net.compile(optimizer='Adam', 
@@ -87,3 +96,8 @@ if __name__ == '__main__':
 		custom_loss(scan_net.get_layer('predictions').get_output_at(-1), scan_net.get_layer('flatten').get_output_at(-1), scan_net.get_layer('flatten').get_output_at(-1))], 
 		metrics = ['accuracy'])
 
+	resnet = ResNet50()
+	print(len(resnet.layers))
+	split_layer_names = ['activation_28', 'activation_40', 'activation_52']
+	scan_resnet = create_scan_for_resnet(resnet, split_layer_names)
+	print(len(scan_resnet.layers))
