@@ -17,6 +17,11 @@ from keras.activations import relu, sigmoid
 from keras.optimizers import Adam, RMSprop
 from keras.datasets import cifar100
 
+# Imports regarding custom image generator
+from skimage.io import imread
+from skimage.transform import rescale, resize
+
+
 def add_module(layer, classifier_name):
     """Attention Module"""
     x = Conv2D(filters=int(layer.shape[-1])//2, kernel_size=(2, 2), strides=2)(layer) #Actual kernel size unknown
@@ -102,6 +107,30 @@ def custom_loss(q_c, F_c=0.0, F_i=0.0, alpha=0.5, beta=0.2): # beta corresponds 
         return loss_value
     return loss
 
+def custom_img_generator(filepaths, batch_size=64): 
+    while True: 
+        batch_paths = np.random.choice(a=filepaths, size=batch_size)
+        batch_input = []
+        batch_output = []
+        for path in batch_paths: 
+            img = imread(path)
+            label = path.split('/')[-2]
+            img = rescale(img, 1/255, anti_aliasing=False)
+            img = resize(img, (224, 224), anti_aliasing=False)
+
+            batch_input.append(img)
+            batch_output.append(label)
+        batch_x = np.array(batch_input)
+        batch_y = np.array(batch_output)
+        batch_outputs = {
+            'classifier_1' : batch_output, 
+            'classifier_2' : batch_output, 
+            'classifier_3' : batch_output, 
+            'prediction' : batch_output
+        }
+        yield(batch_x, batch_outputs)
+
+
 if __name__ == '__main__':
         split_layer_names = ['block2_pool', 'block3_pool', 'block4_pool']
         #model = VGG16(include_top=True, weights='imagenet') #create pretrained VGG16
@@ -142,7 +171,7 @@ if __name__ == '__main__':
 
 
         #new_model.fit(x_train_new,y_train,batch_size=batch_size,epochs=epochs,validation_data=(x_test_new,y_test))
-        scan_net.fit_generator(generator=[generator_train,
+        scan_net.fit_generator(generator=generator_train,
                                 epochs=epochs,
                                 steps_per_epoch = steps_per_epoch,
                                 validation_data=generator_test,
