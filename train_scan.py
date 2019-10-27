@@ -2,6 +2,7 @@ import os
 import tensorflow as tf
 import keras.backend as K
 import copy
+import numpy as np
 
 # from keras.applications import ResNet50
 # from keras.applications import ResNet101
@@ -105,17 +106,32 @@ def custom_loss(q_c, F_c=0.0, F_i=0.0, alpha=0.5, beta=0.2): # beta corresponds 
         F_diff_squared = K.sum(K.square(F_i - F_c))
         loss_value = (1-alpha) * cross_entropy + alpha * KLD + beta * F_diff_squared
         return loss_value
+        print("loss is in use")
     return loss
 
-def custom_img_generator(filepaths, batch_size=64): 
-    while True: 
+
+
+
+def custom_img_generator(filepaths, batch_size=64):
+    class_string = os.listdir('pics/train')
+    #print(class_string)
+    class_dict = dict([(string, string_id) for string_id, string in enumerate(class_string)])
+    #print(class_dict)
+
+
+
+    while True:
         batch_paths = np.random.choice(a=filepaths, size=batch_size)
         batch_input = []
         batch_output = []
-        for path in batch_paths: 
+        for path in batch_paths:
             img = imread(path)
+            #print(img.shape)
             label = path.split('/')[-2]
-            img = rescale(img, 1/255, anti_aliasing=False)
+            #print(label)
+            label = class_dict[label]
+            #img = rescale(img, 1./255, anti_aliasing=False)
+            #print(img.shape)
             img = resize(img, (224, 224), anti_aliasing=False)
 
             batch_input.append(img)
@@ -123,10 +139,10 @@ def custom_img_generator(filepaths, batch_size=64):
         batch_x = np.array(batch_input)
         batch_y = np.array(batch_output)
         batch_outputs = {
-            'classifier_1' : batch_output, 
-            'classifier_2' : batch_output, 
-            'classifier_3' : batch_output, 
-            'prediction' : batch_output
+            'classifier_1' : batch_y,
+            'classifier_2' : batch_y,
+            'classifier_3' : batch_y,
+            'dense_2' : batch_y
         }
         yield(batch_x, batch_outputs)
 
@@ -139,40 +155,68 @@ if __name__ == '__main__':
 
         scan_net = create_scan_net(vgg_16, split_layer_names)
         scan_net.compile(optimizer='Adam',
-        loss = [custom_loss(scan_net.get_layer('dense_2').get_output_at(-1), scan_net.get_layer('flatten_1_original').get_output_at(-1), scan_net.get_layer('flatten_1').get_output_at(-1)),
-        custom_loss(scan_net.get_layer('dense_2').get_output_at(-1), scan_net.get_layer('flatten_1_original').get_output_at(-1), scan_net.get_layer('flatten_2').get_output_at(-1)),
-        custom_loss(scan_net.get_layer('dense_2').get_output_at(-1), scan_net.get_layer('flatten_1_original').get_output_at(-1), scan_net.get_layer('flatten_3').get_output_at(-1)),
-        custom_loss(scan_net.get_layer('dense_2').get_output_at(-1), scan_net.get_layer('flatten_1_original').get_output_at(-1), scan_net.get_layer('flatten_1_original').get_output_at(-1))],
+        # loss = [custom_loss(scan_net.get_layer('dense_2').get_output_at(-1), scan_net.get_layer('flatten_1_original').get_output_at(-1), scan_net.get_layer('flatten_1').get_output_at(-1)),
+        # custom_loss(scan_net.get_layer('dense_2').get_output_at(-1), scan_net.get_layer('flatten_1_original').get_output_at(-1), scan_net.get_layer('flatten_2').get_output_at(-1)),
+        # custom_loss(scan_net.get_layer('dense_2').get_output_at(-1), scan_net.get_layer('flatten_1_original').get_output_at(-1), scan_net.get_layer('flatten_3').get_output_at(-1)),
+        # custom_loss(scan_net.get_layer('dense_2').get_output_at(-1), scan_net.get_layer('flatten_1_original').get_output_at(-1), scan_net.get_layer('flatten_1_original').get_output_at(-1))],
+        # metrics = ['accuracy'])
+        loss = [custom_loss(scan_net.get_layer('dense_2').get_output_at(-1)),custom_loss(scan_net.get_layer('dense_2').get_output_at(-1)),custom_loss(scan_net.get_layer('dense_2').get_output_at(-1)),custom_loss(scan_net.get_layer('dense_2').get_output_at(-1))],
         metrics = ['accuracy'])
         input_shape = scan_net.layers[0].output_shape[1:3]
 
-        print(input_shape)
+        #print(input_shape)
         datagen_train = ImageDataGenerator(rescale=1./255)
         #
         datagen_test =ImageDataGenerator(rescale=1./255)
 
         batch_size = 20
 
-        generator_train = datagen_train.flow_from_directory(directory='pics/train',
-                                                            target_size = input_shape,
-                                                            batch_size=batch_size,
-                                                            shuffle = True)
-        #
-        generator_test = datagen_train.flow_from_directory(directory='pics/test',
-                                                           target_size=input_shape,
-                                                           batch_size=batch_size,
-                                                           shuffle=False)
+        # generator_train = datagen_train.flow_from_directory(directory='pics/train',
+        #                                                     target_size = input_shape,
+        #                                                     batch_size=batch_size,
+        #                                                     shuffle = True)
+        # #
+        # generator_test = datagen_train.flow_from_directory(directory='pics/test',
+        #                                                    target_size=input_shape,
+        #                                                    batch_size=batch_size,
+        #                                                    shuffle=False)
 
-        steps_test = generator_test.n / batch_size
+        #steps_test = generator_test.n / batch_size
+        file_list = []
+        # for (root,dirs,files) in os.walk('pics', topdown=True):
+        #     #print (root)
+        #     #print (dirs)
+        #     #print (files)
+        #     for (ind,text) in enumerate(files):
+        #         if ind > 1:
+        #             #print("this is the text " + text)
+        #             file_list.append(root+'/'+text)
 
+
+        for (path,dir,filenames) in os.walk('pics'):
+            if '.DS_Store' not in filenames[0]:
+                for file in filenames:
+
+                    file_list.append(os.path.join(path,file))
+
+        #print(hej)
+        with open("output.txt", "w") as txt_file:
+            for line in file_list:
+                txt_file.write("".join(line) + "\n")
 
         epochs = 20
         steps_per_epoch = 100
 
 
         #new_model.fit(x_train_new,y_train,batch_size=batch_size,epochs=epochs,validation_data=(x_test_new,y_test))
-        scan_net.fit_generator(generator=generator_train,
-                                epochs=epochs,
-                                steps_per_epoch = steps_per_epoch,
-                                validation_data=generator_test,
-                                validation_steps=steps_test)
+        # scan_net.fit_generator(generator=generator_train,
+        #                         epochs=epochs,
+        #                         steps_per_epoch = steps_per_epoch,
+        #                         validation_data=generator_test,
+        #                         validation_steps=steps_test)
+
+        scan_net.fit_generator(generator=custom_img_generator(file_list),
+                                        epochs=epochs,
+                                        steps_per_epoch = steps_per_epoch)
+
+                #scan_net.fit_generator(generator=custom_img_generator())
