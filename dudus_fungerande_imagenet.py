@@ -65,9 +65,9 @@ if __name__ == '__main__':
 
   steps_test = generator_test.n / batch_size
   if first_time:
-    optimizer = Adam(lr=10**-5)
-  else:
     optimizer = Adam()
+  else:
+    optimizer = Adam(lr=10**-5)
   loss = 'categorical_crossentropy'
   metrics = ['categorical_accuracy']
   checkpoint = ModelCheckpoint(filename, monitor='loss', verbose=0, save_best_only=True, mode='min')
