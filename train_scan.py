@@ -114,6 +114,11 @@ def custom_loss(q_c, F_c=0.0, F_i=0.0, alpha=0.5, beta=0.2): # beta corresponds 
 
 def custom_img_generator(filepaths, batch_size=64):
     class_string = os.listdir('pics/train')
+    print(class_string)
+    class_string.remove('.DS_Store')
+    class_string.sort()
+    print(class_string)
+    #print(class_string)
     #print(class_string)
     class_dict = dict([(string, string_id) for string_id, string in enumerate(class_string)])
     #print(class_dict)
@@ -136,7 +141,7 @@ def custom_img_generator(filepaths, batch_size=64):
 
             batch_input.append(img)
             batch_output.append(label)
-        batch_x = np.array(batch_input)
+        batch_x = np.array(batch_input)*(1./255)
         batch_y = np.array(batch_output)
         batch_outputs = {
             'classifier_1' : batch_y,
