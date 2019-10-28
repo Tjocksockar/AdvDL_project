@@ -23,8 +23,22 @@ from skimage.io import imread
 from skimage.transform import rescale, resize
 
 
-def add_module(layer, classifier_name):
+def add_module(layer, classifier_name, feature_map_shape=(7, 7, 512)):
     """Attention Module"""
+    layer_width=layer.shape[1]
+    division_factor = int(layer_width)/int(feature_map_shape[0])
+    no_of_twos = int(math.log2(division_factor))
+    print(no_of_twos)
+    strides_list=[2, 2, 2]
+    if no_of_twos==1:
+        strides_list=[1, 2, 1]
+    if no_of_twos==2:
+        strides_list=[1, 2, 2]
+    if no_of_twos==3:
+        strides_list=[2, 2, 2]
+    if no_of_twos==4:
+        strides_list=[2, 4, 2]
+    print(strides_list)
     x = Conv2D(filters=int(layer.shape[-1])//2, kernel_size=(2, 2), strides=2)(layer) #Actual kernel size unknown
     x = BatchNormalization()(x)
     x = Activation(relu)(x)
@@ -38,17 +52,18 @@ def add_module(layer, classifier_name):
     """Bottleneck"""
     """Antal filter går från 64 eller 128 till 512, var sker övergången?"""
     """Dimensionen går från 112 till 14, alltså division med 8, eller 2^3"""
-    x = Conv2D(filters=512, kernel_size=(1, 1), strides=1)(x)
+    print(x.shape)
+    x = Conv2D(filters=512, kernel_size=(1, 1), strides=strides_list[0])(x)
     x = BatchNormalization()(x)
     x = Activation(relu)(x)
-    x = Conv2D(filters=512, kernel_size=(3, 3), strides=1)(x)
+    x = Conv2D(filters=512, kernel_size=(3, 3), strides=strides_list[1])(x)
     x = BatchNormalization()(x)
     x = Activation(relu)(x)
-    x = Conv2D(filters=512, kernel_size=(1, 1), strides=1)(x)
+    x = Conv2D(filters=512, kernel_size=(1, 1), strides=strides_list[2])(x)
     x = BatchNormalization()(x)
     x = Activation(relu)(x)
     x = Flatten()(x)
-    pred_layer = Dense(100, activation='softmax', name=classifier_name)(x)
+    pred_layer = Dense(200, activation='softmax', name=classifier_name)(x)
     return pred_layer
 
 def create_scan_net(model, split_layer_names):
