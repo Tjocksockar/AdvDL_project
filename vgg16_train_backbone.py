@@ -14,6 +14,8 @@ from keras.activations import relu, sigmoid
 from keras.optimizers import Adam, RMSprop
 from keras.callbacks import ModelCheckpoint
 
+from data_generator import *
+
 def build_transfer_model():
   model = VGG16(include_top=False, weights='imagenet',input_shape=(224,224,3))
   input_shape = model.layers[0].output_shape[1:3]
