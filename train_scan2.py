@@ -1,10 +1,14 @@
-from random import shuffle
 import os
 import tensorflow as tf
 import keras.backend as K
 import copy
 import numpy as np
 import math
+
+from random import shuffle
+from skimage.io import imread
+from skimage.transform import rescale, resize
+
 
 from keras.preprocessing.image import ImageDataGenerator
 from keras.applications import VGG16
@@ -17,9 +21,6 @@ from keras.activations import relu, sigmoid
 from keras.optimizers import Adam, RMSprop
 from keras.datasets import cifar100
 
-# Imports regarding custom image generator
-from skimage.io import imread
-from skimage.transform import rescale, resize
 
 
 def add_module(layer, classifier_name, feature_map_shape=(7, 7, 512)):
