@@ -58,10 +58,10 @@ def generator_backbone(samples, batch_size=64,shuffle_data=True):
 
 def create_generator_input(training_fraction=0.85):
     file_list = []
-        for (path,dir,filenames) in os.walk('pics'):
-            if  not len(filenames)==0:
-                for file in filenames:
-                    file_list.append(os.path.join(path,file))
+    for (path,dir,filenames) in os.walk('pics'):
+        if  not len(filenames)==0:
+            for file in filenames:
+                file_list.append(os.path.join(path,file))
 
     class_string = os.listdir('pics/train')
     #class_string.remove('.DS_Store')
