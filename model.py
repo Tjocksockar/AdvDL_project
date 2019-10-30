@@ -108,3 +108,15 @@ def custom_loss(q_c, F_c=0.0, F_i=0.0, alpha=0.5, beta=0.2): # beta corresponds 
         return loss_value
         print("loss is in use")
     return loss
+
+def create_scan_for_resnet(model, split_layer_names): 
+	pred_outputs = []
+	for i, layer_name in enumerate(split_layer_names): 
+		layer = model.get_layer(layer_name).output
+		output_name = 'classifier_' + str(i+1)
+		print(output_name)
+		pred_layer = add_module(layer, output_name)
+		pred_outputs.append(pred_layer)
+	pred_outputs.append(model.layers[-1].output)
+	scan_net = Model(inputs=model.input, outputs=pred_outputs)
+	return scan_net
