@@ -1,5 +1,6 @@
-import model
-import data_generator
+from model import*
+from data_generator import*
+from keras.models import load_model
 
 split_layer_names = ['block2_pool', 'block3_pool', 'block4_pool']
 model2 = load_model('checkpoint.hdf5')
@@ -31,3 +32,4 @@ scan_net.fit_generator(generator=generator_scan(train_list),
                         validation_data = generator_scan(val_list), 
                         validation_steps = val_steps_per_epoch)
               
+

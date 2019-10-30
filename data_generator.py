@@ -59,24 +59,35 @@ def generator_backbone(samples, batch_size=64,shuffle_data=True):
 def create_generator_input(training_fraction=0.85):
     file_list = []
     for (path,dir,filenames) in os.walk('pics'):
-        if  not len(filenames)==0:
+        if  not len(filenames)==0 or '.DS_Store' not in filenames[0]:
             for file in filenames:
                 file_list.append(os.path.join(path,file))
-
+    if '.DS_Store' in  file_list:
+        file_list.remove('.DS_Store')
+    if 'pics/.DS_Store' in  file_list: 
+       file_list.remove('pics/.DS_Store')
+    if 'pics/test/.DS_Store' in  file_list:
+       file_list.remove('pics/test/.DS_Store')
+    if 'pics/train/.DS_Store' in  file_list:
+       file_list.remove('pics/train/.DS_Store')
     class_string = os.listdir('pics/train')
-    #class_string.remove('.DS_Store')
     class_string.sort()
+    print(class_string)
+    if '.DS_Store' in  class_string:
+        class_string.remove('.DS_Store')
     class_dict = dict([(string, string_id) for string_id, string in enumerate(class_string)])
+    print(len(class_dict))
 
     final_list = []
     for file in file_list:
-       # print(file)
+        #print(file)
         label = file.split('/')[-2]
         label = class_dict[label]
         final_list.append([file, label])
-    final_list = shuffle(final_list)
+    shuffle(final_list)
     cut_off = int(training_fraction * len(final_list))
     train_list = final_list[0:cut_off]
     val_list = final_list[cut_off:len(final_list)]
     return train_list, val_list
+
 
