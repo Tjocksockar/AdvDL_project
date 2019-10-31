@@ -56,7 +56,7 @@ def generator_backbone(samples, batch_size=64,shuffle_data=True):
             y_train = np.array(y_train)
             yield X_train, y_train
 
-def create_generator_input(training_fraction=0.85):
+def create_generator_input():
     file_list = []
     for (path,dir,filenames) in os.walk('pics'):
         if  not len(filenames)==0 or '.DS_Store' not in filenames[0]:
@@ -84,10 +84,13 @@ def create_generator_input(training_fraction=0.85):
         label = file.split('/')[-2]
         label = class_dict[label]
         final_list.append([file, label])
-    shuffle(final_list)
-    cut_off = int(training_fraction * len(final_list))
-    train_list = final_list[0:cut_off]
-    val_list = final_list[cut_off:len(final_list)]
+    train_list = []
+    val_list = []
+    for element in final_list: 
+        if 'train' in element[0]: 
+            train_list.append(element)
+        else: 
+            val_list.append(element)    
     return train_list, val_list
 
 
