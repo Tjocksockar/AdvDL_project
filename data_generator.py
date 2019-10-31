@@ -5,6 +5,7 @@ import math
 from random import shuffle
 from skimage.io import imread
 from skimage.transform import rescale, resize
+from keras.preprocessing import apply_transform
 
 def generator_scan(samples, batch_size=64,shuffle_data=True):
     num_samples = len(samples)
@@ -21,6 +22,9 @@ def generator_scan(samples, batch_size=64,shuffle_data=True):
                 one_hot[label] = 1
                 img =  imread(img_name)
                 img = resize(img,(224,224))
+                apply_aug = random.randint(0,1)
+                if apply_aug: 
+                    img = apply_transform(img, 'flip_horrizontal')
                 X_train.append(img)
                 y_train.append(one_hot)
 
@@ -49,6 +53,9 @@ def generator_backbone(samples, batch_size=64,shuffle_data=True):
                 one_hot[label] = 1
                 img =  imread(img_name)
                 img = resize(img,(224,224))
+                apply_aug = random.randint(0,1)
+                if apply_aug: 
+                    img = apply_transform(img, 'flip_horrizontal')
                 X_train.append(img)
                 y_train.append(one_hot)
 
