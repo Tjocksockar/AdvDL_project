@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import math
+import random 
 
 from random import shuffle
 from skimage.io import imread
@@ -24,7 +25,7 @@ def generator_scan(samples, batch_size=64,shuffle_data=True):
                 img = resize(img,(224,224))
                 apply_aug = random.randint(0,1)
                 if apply_aug: 
-                    img = np.flipud(plt.imread(img))
+                    img = np.flipud(img)
                 X_train.append(img)
                 y_train.append(one_hot)
 
@@ -55,7 +56,7 @@ def generator_backbone(samples, batch_size=64,shuffle_data=True):
                 img = resize(img,(224,224))
                 apply_aug = random.randint(0,1)
                 if apply_aug: 
-                    img = apply_transform(img, 'flip_horrizontal')
+                    img = np.flipud(img)
                 X_train.append(img)
                 y_train.append(one_hot)
 
@@ -100,4 +101,18 @@ def create_generator_input():
             val_list.append(element)    
     return train_list, val_list
 
+def generator_predict(samples, batch_size=64,shuffle_data=True):
+    num_samples = len(samples)
+    while True: # Loop forever so the generator never terminates
+        shuffle(samples)
+        for offset in range(0, num_samples, batch_size):
+            batch_samples = samples[offset:offset+batch_size]
+            X_train = []
+            for batch_sample in batch_samples:
+                img_name = batch_sample[0]
+                img =  imread(img_name)
+                img = resize(img,(224,224))
+                X_train.append(img)
 
+            X_train = np.array(X_train)
+            yield X_train
