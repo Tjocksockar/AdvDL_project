@@ -5,7 +5,7 @@ import math
 from random import shuffle
 from skimage.io import imread
 from skimage.transform import rescale, resize
-from keras.preprocessing import apply_transform
+#from keras.preprocessing.image import apply_transform
 
 def generator_scan(samples, batch_size=64,shuffle_data=True):
     num_samples = len(samples)
@@ -24,7 +24,7 @@ def generator_scan(samples, batch_size=64,shuffle_data=True):
                 img = resize(img,(224,224))
                 apply_aug = random.randint(0,1)
                 if apply_aug: 
-                    img = apply_transform(img, 'flip_horrizontal')
+                    img = np.flipud(plt.imread(img))
                 X_train.append(img)
                 y_train.append(one_hot)
 
