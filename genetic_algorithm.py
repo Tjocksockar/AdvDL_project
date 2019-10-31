@@ -1,6 +1,7 @@
 from random import randint
+from data_generator import *
 
-def finding_threshold(N=10, generations=50, population_size=3): 
+def finding_threshold(predictions, N=10, generations=50, population_size=3): 
 	parents = [] # initializing random population
 	for i in range(population_size):
 		parent = []
@@ -19,7 +20,7 @@ def finding_threshold(N=10, generations=50, population_size=3):
 
 		ranked_list = [] # calculate fitness and rank
 		for k in range(population_size): 
-			ranked_list.append(fitness(thresholds[k]))
+			ranked_list.append(fitness(thresholds[k], predictions))
 
 		# fittest parents
 		best_val = max(ranked_list)
@@ -71,9 +72,23 @@ def decode_threshold(gene):
 	threshold = 1 - (0.3/len(gene))*summation
 	return threshold
 
-def fitness(threshold): 
+def fitness(threshold, predictions, accuracies=[0.3, 0.4, 0.5, 0.6], baseline=0.36, beta=0.5): 
+	time_consumption = [0.25, 0.5, 0.75, 1.0]
+	acceleration_den = 0
+	tot_accuracy_diff = 0
+	for i in range(predictions[0].shape[0]): 
+		for j in range(len(predictions)): 
+			softmax = max(predictions[j][i, :])
+			if softmax >= threshold or j==3: 
+				acceleration_den += time_consumption[j]
+				this_acc = accuracies[j]
+				tot_accuracy_diff = tot_accuracy_diff + this_acc - baseline
+				break
+	tot_accuracy_diff = tot_accuracy_diff/predictions[0].shape[0]
+	acceleration_ratio = 1 - (acceleration_den / predictions[0].shape[0])
+	score = acceleration_ratio + beta * tot_accuracy_diff
+	return score
+
+
 	return threshold
 
-if __name__ == '__main__': 
-	threshold = finding_threshold()
-	print(threshold)
