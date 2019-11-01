@@ -116,3 +116,14 @@ def generator_predict(samples, batch_size=64,shuffle_data=True):
 
             X_train = np.array(X_train)
             yield X_train
+
+def generator_predict_with_labels(samples): 
+    while True: 
+        x_batch = []
+        for batch_sample in samples: 
+            img_name = batch_sample[0]
+            img =  imread(img_name)
+            img = resize(img,(224,224))
+            x_batch.append(img)
+        X_train = np.array(X_train)
+        yield X_train

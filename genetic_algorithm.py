@@ -1,7 +1,7 @@
 from random import randint
 from data_generator import *
 
-def finding_threshold(predictions, N=10, generations=50, population_size=3): 
+def finding_threshold(predictions, N=30, generations=50, population_size=3): 
 	parents = [] # initializing random population
 	for i in range(population_size):
 		parent = []
@@ -89,6 +89,44 @@ def fitness(threshold, predictions, accuracies=[0.3, 0.4, 0.5, 0.6], baseline=0.
 	score = acceleration_ratio + beta * tot_accuracy_diff
 	return score
 
+def get_classifier_used(threshold, predictions): 
+	statistics = [] # idx 0 : shallowest classifier and so on ...
+	for k in range(len(predictions)): 
+		statistics.append(0)
+	n_predictions = predictions[0].shape[0]
+	for i in range(n_predictions): 
+		for j in range(len(predictions)): 
+			softmax = max(predictions[j][i, :])
+			if softmax >= threshold or j==3: 
+				statistics[j] += 1
+				break
+	return statistics
 
-	return threshold
+def get_accuracy_vs_acceleration(threshold, val_list, predictions): 
+	class_string = os.listdir('pics/train')
+	class_string.sort()
+	print(class_string)
+	if '.DS_Store' in  class_string:
+		class_string.remove('.DS_Store')
+	class_dict = dict([(string, string_id) for string_id, string in enumerate(class_string)])
+	print(len(class_dict))
+
+	time_consumption = [0.25, 0.5, 0.75, 1.0]
+	acceleration_den = 0
+	correct_preds = 0
+	for i in range(predictions[0].shape[0]): 
+		for j in range(len(predictions)): 
+			softmax = max(predictions[j][i, :])
+			if softmax >= threshold or j==3: 
+				acceleration_den += time_consumption[j]
+				for k, this_softmax in enumerate(predictions[j][i, :]): 
+					if this_softmax == softmax: 
+						pred_class = k
+						true_class = val_list[i].split('/')[-2]
+						if class_dict[true_class] == pred_class: 
+							correct_preds += 1
+				break
+	acceleration_ratio = 1 - (acceleration_den / predictions[0].shape[0])
+	accuracy = correct_preds / predictions[0].shape[0]
+	return acceleration_ratio, accuracy
 
