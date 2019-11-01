@@ -100,6 +100,8 @@ def get_classifier_used(threshold, predictions):
 			if softmax >= threshold or j==3: 
 				statistics[j] += 1
 				break
+	for m in range(len(statistics)): 
+		statistics[m] = statistics[m] / n_predictions
 	return statistics
 
 def get_accuracy_vs_acceleration(threshold, val_list, predictions): 
