@@ -13,5 +13,7 @@ The implementation is made in Keras with Tensorflow.
 ## Instructions for running the code
 
 To start training of the backbone VGG16 run ```python3 vgg16_train_backbone.py```
+
 To start training of the backbone VGG19 run ```python3 vgg19_train_backbone.py```
+
 To start training of SCAN run ```python3 train.py ```
