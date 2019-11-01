@@ -12,16 +12,16 @@ The implementation is made in Keras with Tensorflow.
 ## Instructions for running the code
 
 Before running any code, make sure to download CIFAR100 and place it in the working directory. Name the CIFAR100 dataset outer folder to pics. <br/>
-Your dataset folder should look like this\\
-pics \\
--- train \\
--- -- class1 \\
--- -- -- image_1 and so on\\
--- -- class 2 and so on\\
--- test \\
--- -- class1\\
--- -- -- image_1 and so on\\
--- -- class 2 and so on\\
+Your dataset folder should look like this <br/>
+pics <br/>
+-- train <br/>
+-- -- class1 <br/>
+-- -- -- image_1 and so on <br/>
+-- -- class 2 and so on <br/>
+-- test <br/>
+-- -- class1 <br/>
+-- -- -- image_1 and so on <br/>
+-- -- class 2 and so on <br/>
 
 To start training of the backbone VGG16 run ```python3 vgg16_train_backbone.py```
 
