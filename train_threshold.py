@@ -1,6 +1,7 @@
 from genetic_algorithm import *
 from data_generator import *
 from random import shuffle
+from keras.models import load_model
 
 scan_net = load_model('scan.hdf5')
 
