@@ -11,7 +11,7 @@ The implementation is made in Keras with Tensorflow.
 
 ## Instructions for running the code
 
-Before running any code, make sure to download CIFAR100 and place it in the working directory. Name the CIFAR100 dataset outer folder to pics. \\ 
+Before running any code, make sure to download CIFAR100 and place it in the working directory. Name the CIFAR100 dataset outer folder to pics. <br/>
 Your dataset folder should look like this\\
 pics \\
 -- train \\
