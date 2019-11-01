@@ -72,7 +72,7 @@ def decode_threshold(gene):
 	threshold = 1 - (0.3/len(gene))*summation
 	return threshold
 
-def fitness(threshold, predictions, accuracies=[0.3, 0.4, 0.5, 0.6], baseline=0.36, beta=0.5): 
+def fitness(threshold, predictions, accuracies=[0.3706, 0.4051, 0.4145, 0.2450], baseline=0.2330, beta=0.5): 
 	time_consumption = [0.25, 0.5, 0.75, 1.0]
 	acceleration_den = 0
 	tot_accuracy_diff = 0
