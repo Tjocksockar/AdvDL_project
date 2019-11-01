@@ -125,5 +125,5 @@ def generator_predict_with_labels(samples):
             img =  imread(img_name)
             img = resize(img,(224,224))
             x_batch.append(img)
-        X_train = np.array(X_train)
+        X_train = np.array(x_batch)
         yield X_train

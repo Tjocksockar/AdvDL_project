@@ -69,7 +69,7 @@ def decode_threshold(gene):
 	summation = 0
 	for bit in gene: 
 		summation += bit
-	threshold = 1 - (0.3/len(gene))*summation
+	threshold = 1 - (0.5/len(gene))*summation
 	return threshold
 
 def fitness(threshold, predictions, accuracies=[0.3706, 0.4051, 0.4145, 0.2450], baseline=0.2330, beta=0.5): 
@@ -122,9 +122,9 @@ def get_accuracy_vs_acceleration(threshold, val_list, predictions):
 			if softmax >= threshold or j==3: 
 				acceleration_den += time_consumption[j]
 				for k, this_softmax in enumerate(predictions[j][i, :]): 
-					if this_softmax == softmax: 
+					if this_softmax == softmax and i < 100: 
 						pred_class = k
-						true_class = val_list[i].split('/')[-2]
+						true_class = val_list[i][0].split('/')[-2]
 						if class_dict[true_class] == pred_class: 
 							correct_preds += 1
 				break
