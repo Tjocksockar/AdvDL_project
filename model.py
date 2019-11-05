@@ -4,59 +4,61 @@ import copy
 import numpy as np
 import math
 
-from keras.applications import VGG16
+from keras.applications import VGG16, ResNet50, ResNet101, ResNet152
 from keras.losses import categorical_crossentropy, kullback_leibler_divergence
 from keras.layers import Dense, Flatten, Input, Conv2D, BatchNormalization, Activation, Conv2DTranspose, Multiply, Dropout
 from keras.models import Model, Sequential, load_model
 from keras.activations import relu, sigmoid
 from keras.optimizers import Adam, RMSprop
 
-def add_module(layer, classifier_name, feature_map_shape=(7, 7, 512)):
-    """Attention Module"""
-    layer_width=layer.shape[1]
-    division_factor = int(layer_width)/int(feature_map_shape[0])
-    no_of_twos = int(math.log2(division_factor))
-    print(no_of_twos)
-    strides_list=[2, 2, 2]
-    padding = 'valid'
-    if no_of_twos==1:
-        strides_list=[1, 2, 1]
-        padding = 'same'
-    if no_of_twos==2:
-        strides_list=[1, 2, 2]
-    if no_of_twos==3:
-        strides_list=[2, 2, 2]
-    if no_of_twos==4:
-        strides_list=[2, 4, 2]
-    print(strides_list)
-    x = Conv2D(filters=int(layer.shape[-1])//2, kernel_size=(2, 2), strides=2)(layer) #Actual kernel size unknown
-    x = BatchNormalization()(x)
-    x = Activation(relu)(x)
-    x = Conv2DTranspose(filters=int(layer.shape[-1]), kernel_size=(2, 2), strides=(2, 2))(x) #Actual kernel size unknown
-    x = BatchNormalization()(x)
-    x = Activation(sigmoid)(x)
-    x.set_shape(layer.shape)
+def add_module(layer, classifier_name, feature_map_shape=(7, 7, 512), classes=100):
+	"""Attention Module"""
+	layer_width=layer.shape[1]
+	no_of_filters=feature_map_shape[2]
+	print(layer.shape)
+	division_factor = int(layer_width)/int(feature_map_shape[0])
+	no_of_twos = int(math.log2(division_factor))
+	print(no_of_twos)
+	padding = 'valid'
+	strides_list=[2, 2, 2]
+	if no_of_twos==1:
+		padding = 'same'
+		strides_list=[1, 2, 1]
+	if no_of_twos==2:
+		strides_list=[1, 2, 2]
+	if no_of_twos==3:
+		strides_list=[2, 2, 2]
+	if no_of_twos==4:
+		strides_list=[2, 4, 2]
+	print(strides_list)
+	x = Conv2D(filters=int(layer.shape[-1])//2, kernel_size=(2, 2), strides=2)(layer) #Actual kernel size unknown
+	x = BatchNormalization()(x)
+	x = Activation(relu)(x)
+	x = Conv2DTranspose(filters=int(layer.shape[-1]), kernel_size=(2, 2), strides=(2, 2))(x) #Actual kernel size unknown
+	x = BatchNormalization()(x)
+	x = Activation(sigmoid)(x)
+	x.set_shape(layer.shape)
 
-    x = Multiply()([x, layer]) #is this the right dot product? (yes, pretty shure)
+	x = Multiply()([x, layer]) #is this the right dot product? (yes, pretty shure)
 
-    """Bottleneck"""
-    """Antal filter går från 64 eller 128 till 512, var sker övergången?"""
-    """Dimensionen går från 112 till 14, alltså division med 8, eller 2^3"""
-    print(x.shape)
-    x = Conv2D(filters=512, kernel_size=(1, 1), strides=strides_list[0])(x)
-    x = BatchNormalization()(x)
-    x = Activation(relu)(x)
-    x = Conv2D(filters=512, kernel_size=(3, 3), strides=strides_list[1],padding=padding)(x)
-    x = BatchNormalization()(x)
-    x = Activation(relu)(x)
-    x = Conv2D(filters=512, kernel_size=(1, 1), strides=strides_list[2])(x)
-    x = BatchNormalization()(x)
-    x = Activation(relu)(x)
-    x = Flatten()(x)
-    pred_layer = Dense(100, activation='softmax', name=classifier_name)(x)
-    return pred_layer
+	"""Bottleneck"""
+	"""Antal filter går från 64 eller 128 till 512, var sker övergången?"""
+	"""Dimensionen går från 112 till 14, alltså division med 8, eller 2^3"""
+	print(x.shape)
+	x = Conv2D(filters=no_of_filters, kernel_size=(1, 1), strides=strides_list[0])(x)
+	x = BatchNormalization()(x)
+	x = Activation(relu)(x)
+	x = Conv2D(filters=no_of_filters, kernel_size=(3, 3), strides=strides_list[1], padding=padding)(x)
+	x = BatchNormalization()(x)
+	x = Activation(relu)(x)
+	x = Conv2D(filters=no_of_filters, kernel_size=(1, 1), strides=strides_list[2])(x)
+	x = BatchNormalization()(x)
+	x = Activation(relu)(x)
+	x = Flatten()(x)
+	pred_layer = Dense(classes, activation='softmax', name=classifier_name)(x)
+	return pred_layer
 
-def create_scan_net(model, split_layer_names):
+def create_scan_net(model, split_layer_names, feature_map_shape=(7, 7, 512)):
     model_input = Input(shape=(224,224,3), dtype='float32', name='main_input')
     model.layers[1].trainable = False
     X = model.layers[1](model_input)
@@ -118,22 +120,22 @@ def build_resnet_model(classes, version=50, input_shape=(224,224,3)):
     model = ResNet152(include_top=False, weights='imagenet',input_shape=input_shape)
   print('Using ResNet'+str(version))
   transfer_layer = model.layers[-1]
-  input_shape = model.layers[0].output_shape[1:3]
   print(input_shape)
-  conv_model = Model(inputs=model.input, outputs=transfer_layer.output)
+  #conv_model = Model(inputs=model.input, outputs=transfer_layer.output)
   new_model = Sequential()
-  new_model.add(conv_model)
+  new_model.add(model)
   new_model.add(Flatten())
   new_model.add(Dense(1024,activation='relu'))
   new_model.add(Dropout(0.25))
   new_model.add(Dense(classes ,activation='softmax'))
-  conv_model.trainable = False
+  model.trainable = False
   return input_shape, new_model
 
-def create_scan_for_resnet(model, split_layer_names=['add_3', 'add_6', 'add_9'], feature_map_shape=(7, 7, 2048)): 
+def create_scan_net_resnet(model, split_layer_names=['add_3', 'add_6', 'add_9'], feature_map_shape=(7, 7, 2048)): 
   pred_outputs = []
+  conv_model = model.layers[0]
   for i, layer_name in enumerate(split_layer_names): 
-    layer = model.get_layer(layer_name).output
+    layer = conv_model.get_layer(layer_name).output
     output_name = 'classifier_' + str(i+1)
     print(output_name)
     pred_layer = add_module(layer, output_name)
@@ -141,3 +143,34 @@ def create_scan_for_resnet(model, split_layer_names=['add_3', 'add_6', 'add_9'],
   pred_outputs.append(model.layers[-1].output)
   scan_net = Model(inputs=model.input, outputs=pred_outputs)
   return scan_net
+
+# def create_scan_net_resnet(model, split_layer_names, feature_map_shape=(7, 7, 2048)):
+#     model.summary()
+#     model_input = model.layers[0].layers[0].output#Input(shape=(224,224,3), dtype='float32', name='main_input')
+#     #model.layers[0].trainable = False
+#     X = model.layers[0].layers[1](model_input)
+#     pred_outputs = [] # holding all output layers of the scan_net
+#     i = 1 # used in classifier names
+#     for j, layer in enumerate(model.layers[0].layers):
+#         if j > 1:
+#             print(j)
+#             X = layer(X)
+#             layer.trainable = False
+#             if layer.name in split_layer_names:
+#                 classifier_name = 'classifier_' + str(i)
+#                 print(classifier_name)
+#                 pred_layer = add_module(X, classifier_name, feature_map_shape)
+#                 # pred_layer = Flatten()(X)
+#                 # pred_layer = Dense(1000, activation='softmax', name=classifier_name)(pred_layer)
+#                 pred_outputs.append(pred_layer)
+#                 i += 1
+#     final_output = model.layers[-1].output
+#     pred_outputs.append(final_output)
+#     #model.get_layer(name='flatten_1').name='flatten_1_original'
+#     model.get_layer(name='flatten_1').name='flatten_1_original'
+
+#     pred_outputs.append(X)
+#     scan_model = Model(inputs=model_input, outputs=pred_outputs)
+#     scan_model.summary()
+#     #print(len(scan_model.layers))
+#     return scan_model
