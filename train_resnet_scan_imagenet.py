@@ -22,15 +22,13 @@ if version == 101:
 if version == 152:
 	split_layer_names = ['conv2_block1_add', 'conv2_block3_add', 'conv3_block2_add']
 
-train_list, val_list = create_generator_input_imagenet(dataset_filename=dataset_filename)
+#train_list, val_list = create_generator_input_imagenet(dataset_filename=dataset_filename)
 if first_time:
-	input_shape, new_model = build_resnet_model(classes=classes, version=version)
-	plot_model(new_model.layers[0], to_file='resnet_model.png')
-	new_model.layers[0].summary()
-	scan_resnet = create_scan_net_resnet(new_model, split_layer_names, feature_map_shape=(7, 7, 2048))
+	input_shape, new_model = build_resnet_model2(classes=classes, version=version)
+	scan_resnet = create_scan_net_resnet(new_model, split_layer_names)
+	scan_resnet.summary()
 else:
 	new_model = load_model(filename)
-print(new_model.layers[0].layers[0].output.shape)
 batch_size = 64
 epochs = 1024
 

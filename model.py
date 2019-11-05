@@ -123,7 +123,6 @@ def build_resnet_model(classes, version=50, input_shape=(224,224,3)):
     model = ResNet152(include_top=False, weights='imagenet',input_shape=input_shape)
   print('Using ResNet'+str(version))
   transfer_layer = model.layers[-1]
-  print(input_shape)
   #conv_model = Model(inputs=model.input, outputs=transfer_layer.output)
   new_model = Sequential()
   new_model.add(model)
@@ -134,11 +133,40 @@ def build_resnet_model(classes, version=50, input_shape=(224,224,3)):
   model.trainable = False
   return input_shape, new_model
 
-def create_scan_net_resnet(model, split_layer_names=['add_3', 'add_6', 'add_9'], feature_map_shape=(7, 7, 2048)): 
+def build_resnet_model2(classes, version=50, input_shape=(224,224,3)): 
+  if version==50:
+    model = ResNet50(include_top=False, weights='imagenet',input_shape=input_shape)
+  if version==101:
+    model = ResNet101(include_top=False, weights='imagenet',input_shape=input_shape)
+  if version==152:
+    model = ResNet152(include_top=False, weights='imagenet',input_shape=input_shape)
+  model.trainable = False
+  model_input = model.input
+  X = model.layers[-1]
+  #conv_model = Model(inputs=model.input, outputs=transfer_layer.output)
+  X = Flatten()(X.output)
+  X = Dense(1024,activation='relu')(X)
+  X = Dropout(0.25)(X)
+  X = Dense(classes ,activation='softmax')(X)
+  new_model = Model(inputs=model_input, outputs=X)
+  return input_shape, new_model
+
+"""def create_scan_net_resnet(model, split_layer_names=['add_3', 'add_6', 'add_9'], feature_map_shape=(7, 7, 2048)): 
   pred_outputs = []
-  conv_model = model.layers[0]
   for i, layer_name in enumerate(split_layer_names): 
     layer = conv_model.get_layer(layer_name).output
+    output_name = 'classifier_' + str(i+1)
+    print(output_name)
+    pred_layer = add_module(layer, output_name)
+    pred_outputs.append(pred_layer)
+  pred_outputs.append(model.layers[-1].output)
+  scan_net = Model(inputs=model.input, outputs=pred_outputs)
+  return scan_net"""
+
+def create_scan_net_resnet(model, split_layer_names): 
+  pred_outputs = []
+  for i, layer_name in enumerate(split_layer_names): 
+    layer = model.get_layer(layer_name).output
     output_name = 'classifier_' + str(i+1)
     print(output_name)
     pred_layer = add_module(layer, output_name)
