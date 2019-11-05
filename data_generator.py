@@ -93,10 +93,13 @@ def create_generator_input(training_fraction=0.85, dataset_filename='pics'):
         print(label)
         label = class_dict[label]
         final_list.append([file, label])
-    shuffle(final_list)
-    cut_off = int(training_fraction * len(final_list))
-    train_list = final_list[0:cut_off]
-    val_list = final_list[cut_off:len(final_list)]
+    train_list = []
+    val_list = []
+    for element in final_list: 
+        if 'train' in element[0]: 
+            train_list.append(element)
+        else: 
+            val_list.append(element)    
     return train_list, val_list
 
 def generator_scan_imagenet(samples, batch_size=64,shuffle_data=True):
