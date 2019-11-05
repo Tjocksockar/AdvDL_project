@@ -183,13 +183,10 @@ def create_generator_input_imagenet(training_fraction=0.85, dataset_filename='ti
         label = file.split('/')[-3]
         label = class_dict[label]
         final_list.append([file, label])
-    train_list = []
-    val_list = []
-    for element in final_list: 
-        if 'train' in element[0]: 
-            train_list.append(element)
-        else: 
-            val_list.append(element)    
+    shuffle(final_list)
+    cut_off = int(training_fraction * len(final_list))
+    train_list = final_list[0:cut_off]
+    val_list = final_list[cut_off:len(final_list)] 
     return train_list, val_list
 
 def generator_predict(samples, batch_size=64,shuffle_data=True):
