@@ -108,8 +108,11 @@ def custom_loss(q_c, F_c=0.0, F_i=0.0, alpha=0.5, beta=0.2): # beta corresponds 
         F_diff_squared = K.sum(K.square(F_i - F_c))
         loss_value = (1-alpha) * cross_entropy + alpha * KLD + beta * F_diff_squared
         return loss_value
-        print("loss is in use")
     return loss
+
+def loss(y_true, y_pred): # needed for loading trained SCAN model. Known issue in Keras
+    loss_value = cross_entropy = categorical_crossentropy(y_true, y_pred)
+    return loss_value
 
 def build_resnet_model(classes, version=50, input_shape=(224,224,3)): 
   if version==50:

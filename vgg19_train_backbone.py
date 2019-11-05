@@ -18,7 +18,6 @@ from data_generator import *
 
 def build_transfer_model():
   model = VGG19(include_top=False, weights='imagenet',input_shape=(224,224,3))
-  model.summary
   input_shape = model.layers[0].output_shape[1:3]
   print(input_shape)
   transfer_layer = model.get_layer('block5_pool')

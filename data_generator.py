@@ -1,10 +1,12 @@
 import os
 import numpy as np
 import math
+import random 
 
 from random import shuffle
 from skimage.io import imread
 from skimage.transform import rescale, resize
+#from keras.preprocessing.image import apply_transform
 
 def generator_scan(samples, batch_size=64,shuffle_data=True):
     num_samples = len(samples)
@@ -21,6 +23,9 @@ def generator_scan(samples, batch_size=64,shuffle_data=True):
                 one_hot[label] = 1
                 img =  imread(img_name)
                 img = resize(img,(224,224))
+                apply_aug = random.randint(0,1)
+                if apply_aug: 
+                    img = np.flipud(img)
                 X_train.append(img)
                 y_train.append(one_hot)
 
@@ -49,6 +54,9 @@ def generator_backbone(samples, batch_size=64,shuffle_data=True):
                 one_hot[label] = 1
                 img =  imread(img_name)
                 img = resize(img,(224,224))
+                apply_aug = random.randint(0,1)
+                if apply_aug: 
+                    img = np.flipud(img)
                 X_train.append(img)
                 y_train.append(one_hot)
 
@@ -175,10 +183,38 @@ def create_generator_input_imagenet(training_fraction=0.85, dataset_filename='ti
         label = file.split('/')[-3]
         label = class_dict[label]
         final_list.append([file, label])
-    shuffle(final_list)
-    cut_off = int(training_fraction * len(final_list))
-    train_list = final_list[0:cut_off]
-    val_list = final_list[cut_off:len(final_list)]
+    train_list = []
+    val_list = []
+    for element in final_list: 
+        if 'train' in element[0]: 
+            train_list.append(element)
+        else: 
+            val_list.append(element)    
     return train_list, val_list
 
+def generator_predict(samples, batch_size=64,shuffle_data=True):
+    num_samples = len(samples)
+    while True: # Loop forever so the generator never terminates
+        shuffle(samples)
+        for offset in range(0, num_samples, batch_size):
+            batch_samples = samples[offset:offset+batch_size]
+            X_train = []
+            for batch_sample in batch_samples:
+                img_name = batch_sample[0]
+                img =  imread(img_name)
+                img = resize(img,(224,224))
+                X_train.append(img)
 
+            X_train = np.array(X_train)
+            yield X_train
+
+def generator_predict_with_labels(samples): 
+    while True: 
+        x_batch = []
+        for batch_sample in samples: 
+            img_name = batch_sample[0]
+            img =  imread(img_name)
+            img = resize(img,(224,224))
+            x_batch.append(img)
+        X_train = np.array(x_batch)
+        yield X_train
