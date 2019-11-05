@@ -36,15 +36,16 @@ def build_transfer_model():
   return input_shape, new_model
 
 if __name__ == '__main__':
-  filename = "checkpoint.hdf5"
+  filename = "checkpoint_VGG19.hdf5"
   first_time=True
   dataset = "cifar100"
   if first_time:
     input_shape, new_model = build_transfer_model()
   else:
     input_shape=(224,224)
-    filename="checkpoint_"+dataset+".hdf5"
+    filename="checkpoint_VGG19_"+dataset+".hdf5"
     new_model = load_model(filename)
+  new_model.summary()
   print()
   print(new_model.layers[0].layers[0].output.shape)
   print()
